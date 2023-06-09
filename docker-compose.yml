@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  obsidian-livesync:
+    image: bitnami/couchdb:3
+    environment:
+      - "COUCHDB_USER=${COUCHDB_USER}"
+      - "COUCHDB_PASSWORD=${COUCHDB_PASSWORD}"
+    volumes:
+      - couchdb_data:/bitnami/couchdb
+      - ./config:/opt/bitnami/couchdb/etc/local.d
+    ports:
+      - "5984"
+    networks:
+      - livesync
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    environment:
+      - "TUNNEL_URL=http://obsidian-livesync:5984"
+      - "TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}"
+    networks:
+      - livesync
+    restart: unless-stopped
+
+networks:
+  livesync:
+
+volumes:
+  couchdb_data:
